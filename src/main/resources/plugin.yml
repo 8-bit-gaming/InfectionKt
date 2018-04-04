@@ -1,0 +1,8 @@
+name: InfectionKt
+main: cf.pixelinc.InfectionPlugin
+author: PixeL
+version: 1.0
+
+commands:
+  infected:
+    description: Main command for plugin
