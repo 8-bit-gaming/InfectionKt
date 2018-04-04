@@ -2,6 +2,8 @@ package cf.pixelinc.infection.infections
 
 import cf.pixelinc.infection.BaseInfection
 import cf.pixelinc.infection.InfectionType
+import cf.pixelinc.util.isDay
+import cf.pixelinc.util.isOutside
 import org.bukkit.ChatColor
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
@@ -31,4 +33,11 @@ object ZombieInfection : BaseInfection("T-Virus", InfectionType.ZOMBIE, EntityTy
                        entity.target = null
         }
     }
+
+    override fun tickInfection(player: Player) {
+        if (player.isOutside())
+            if (player.world.isDay() && this.shouldBurn)
+                player.fireTicks = 20 * 3
+    }
+
 }

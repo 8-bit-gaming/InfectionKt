@@ -10,7 +10,7 @@ import org.bukkit.scheduler.BukkitTask
 
 class InfectionPlugin: JavaPlugin() {
     val infectionManager: InfectionManager = InfectionManager()
-    var burnScheduler: BukkitTask? = null
+    var infectionScheduler: BukkitTask? = null
 
     companion object {
         var instance: InfectionPlugin? = null

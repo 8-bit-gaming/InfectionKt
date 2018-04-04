@@ -2,8 +2,6 @@ package cf.pixelinc.events
 
 import cf.pixelinc.InfectionPlugin
 import cf.pixelinc.infection.InfectionType
-import cf.pixelinc.util.isDay
-import cf.pixelinc.util.isOutside
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
@@ -30,16 +28,14 @@ object Events : Listener {
     @EventHandler
     fun onPlayerJoin(e: PlayerJoinEvent) {
         // Start the burn scheduler if there's actually players.
-        if (InfectionPlugin.instance?.burnScheduler == null) {
+        if (InfectionPlugin.instance?.infectionScheduler == null) {
             print("A Player has joined, starting the scheduler.")
-            InfectionPlugin.instance?.burnScheduler = Bukkit.getScheduler().runTaskTimerAsynchronously(InfectionPlugin.instance, {
+            InfectionPlugin.instance?.infectionScheduler = Bukkit.getScheduler().runTaskTimerAsynchronously(InfectionPlugin.instance, {
                 for (player in Bukkit.getOnlinePlayers()) {
                     val playerData: PlayerData = PlayerData[player]
 
-                    if (playerData.isInfected() && playerData.infection?.shouldBurn!!) {
-                        if (player.isOutside() && player.world.isDay()) {
-                            player.fireTicks = 20 * 3
-                        }
+                    if (playerData.isInfected()) {
+                        playerData.infection?.tickInfection(player)
                     }
                 }
             }, 20L, 20L)
@@ -49,12 +45,12 @@ object Events : Listener {
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
         if (Bukkit.getOnlinePlayers().size - 1 <= 0) {
-            val scheduler = InfectionPlugin.instance?.burnScheduler
+            val scheduler = InfectionPlugin.instance?.infectionScheduler
             scheduler?.cancel()
 
-            InfectionPlugin.instance?.burnScheduler = null
+            InfectionPlugin.instance?.infectionScheduler = null
 
-            print("All the players have left the server, cancelling the burn scheduler")
+            print("All the players have left the server, cancelling the infection scheduler")
         }
     }
 

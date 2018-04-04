@@ -1,6 +1,9 @@
 package cf.pixelinc.commands
 
+import cf.pixelinc.InfectionPlugin
 import cf.pixelinc.events.PlayerData
+import cf.pixelinc.infection.BaseInfection
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -20,7 +23,48 @@ object InfectCmd : CommandExecutor {
         if (args.isNotEmpty()) {
             when(args[0]) {
                 "status" ->
-                        player.sendMessage("${ChatColor.GRAY}You are currently${if (!playerData.isInfected()) " ${ChatColor.GREEN}not" else ChatColor.RED.toString()} infected")
+                    player.sendMessage("${ChatColor.GRAY}You are currently${if (!playerData.isInfected()) " ${ChatColor.GREEN}not infected" else " ${ChatColor.RED}infected with the ${playerData.infection?.name}"}")
+                "infect" -> {
+                    if (args.size >= 3) {
+                        val target: Player? = Bukkit.getPlayer(args[1])
+                        if (target == null) {
+                            player.sendMessage("${ChatColor.RED}The player, '${args[1]}', could not be found.")
+                            return false
+                        }
+
+                        val infection: BaseInfection? = InfectionPlugin.instance?.infectionManager?.getInfection(args[2])
+
+                        if (infection == null) {
+                            // TODO: Make it auto get the infections cuz I shouldn't need to update it every time.
+                            player.sendMessage("${ChatColor.RED}The infection, '${args[2]}', does not exist, try: T-Virus/Radiation")
+                            return false
+                        }
+
+                        // Grab their data
+                        val targetData: PlayerData = PlayerData[target]
+                        targetData.infection = infection
+
+                        player.sendMessage("${ChatColor.GREEN}Successfully infected '${target.name}' with the ${infection.name}")
+                        target.sendMessage("${ChatColor.RED}You have been infected with the ${infection.name}")
+                    } else
+                        player.sendMessage("${ChatColor.RED}Invalid usage: infect <player> <infection>")
+                }
+                "uninfect" -> {
+                    if (args.size >= 2) {
+                        val target: Player? = Bukkit.getPlayer(args[1])
+                        if (target == null) {
+                            player.sendMessage("${ChatColor.RED}The player, '${args[1]}', could not be found.")
+                            return false
+                        }
+
+                        val targetData: PlayerData = PlayerData[target]
+                        targetData.infection = null
+
+                        player.sendMessage("${ChatColor.GREEN}${target.name} has been cured of all diseases.")
+                        target.sendMessage("${ChatColor.GREEN}You have been magically cured of all diseases.")
+                    } else
+                        player.sendMessage("${ChatColor.RED}Invalid usage: uninfect <player>")
+                }
                 else -> {
                     player.sendMessage("${ChatColor.RED}Invalid sub-command, valid: status")
                 }
