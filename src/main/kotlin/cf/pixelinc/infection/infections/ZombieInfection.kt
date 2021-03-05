@@ -1,20 +1,33 @@
 package cf.pixelinc.infection.infections
 
+import cf.pixelinc.events.PlayerData
 import cf.pixelinc.infection.BaseInfection
 import cf.pixelinc.infection.InfectionType
 import cf.pixelinc.util.isDay
 import cf.pixelinc.util.isOutside
 import org.bukkit.ChatColor
-import org.bukkit.entity.Entity
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Player
-import org.bukkit.entity.Zombie
+import org.bukkit.entity.*
+import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 
 object ZombieInfection : BaseInfection("T-Virus", InfectionType.ZOMBIE, EntityType.ZOMBIE), Listener {
-    override val shouldBurn = true
+
+    /*
+        The classic zombie infection.
+        Most widely known as The T-Virus (from resident evil).
+
+        This infection causes the player to be friends with any hostile mob (they wont attack them).
+        This may seem like a big plus, but... there are some downsides.
+
+        The player now burns in the day-light, oh no!
+        The player must eat brains (kill passive mobs, or players) or they will rot away and die.
+
+        If a passive mob is infected:
+          - They will attack players and other passive mobs nearby.
+     */
 
     override fun infect(e: Entity) {
         if (e is Player) {
@@ -26,18 +39,30 @@ object ZombieInfection : BaseInfection("T-Virus", InfectionType.ZOMBIE, EntityTy
 
             player.sendMessage("${ChatColor.RED} You all the sudden feel the need for.. brains?!")
 
-            // Now lets make all the zombies aggro'd nearby aware that the player is now friendly.
+            // Now lets make all the hostile mobs aggro'd nearby aware that the player is now friendly.
             for(entity in player.getNearbyEntities(50.0, 50.0, 50.0))
-                if (entity is Zombie)
-                   if (entity.target is Player && entity.target.uniqueId == player.uniqueId)
+                if (entity is Monster)
+                   if (entity.target is Player && (entity.target as Player).uniqueId == player.uniqueId)
                        entity.target = null
         }
     }
 
     override fun tickInfection(player: Player) {
         if (player.isOutside())
-            if (player.world.isDay() && this.shouldBurn)
+            if (player.world.isDay())
                 player.fireTicks = 20 * 3
+    }
+
+    @EventHandler
+    fun onEntityTarget(e: EntityTargetLivingEntityEvent) {
+        if (e.target is Player && e.entity is Monster) {
+            val player: Player = (e.target as Player)
+            val playerData: PlayerData = PlayerData[player]
+
+            // Any hostile mobs won't target the infected players now.
+            if (playerData.isInfected())
+                e.isCancelled = true
+        }
     }
 
 }
