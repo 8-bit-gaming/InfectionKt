@@ -18,12 +18,13 @@ class InfectionPlugin: JavaPlugin() {
     }
 
     override fun onEnable() {
+        instance = this
+
         getCommand("infected")?.setExecutor(InfectCmd)
 
         Bukkit.getPluginManager().registerEvents(Events, this)
         Bukkit.getPluginManager().registerEvents(PlayerData, this)
 
-        instance = this
     }
 
 }
