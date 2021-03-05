@@ -1,13 +1,16 @@
 package cf.pixelinc.commands
 
 import cf.pixelinc.InfectionPlugin
+import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.events.PlayerData
 import cf.pixelinc.infection.BaseInfection
+import net.minecraft.server.v1_16_R3.EntityTypes
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
 import org.bukkit.entity.Player
 
 object InfectCmd : CommandExecutor {
@@ -64,6 +67,11 @@ object InfectCmd : CommandExecutor {
                         target.sendMessage("${ChatColor.GREEN}You have been magically cured of all diseases.")
                     } else
                         player.sendMessage("${ChatColor.RED}Invalid usage: uninfect <player>")
+                }
+                "spawn" -> {
+                    val zombie = InfectedEntity(player.location, EntityTypes.COW)
+                    (player.world as CraftWorld).handle.addEntity(zombie)
+                    player.sendMessage("Zambie spawned")
                 }
                 else -> {
                     player.sendMessage("${ChatColor.RED}Invalid sub-command, valid: status")
