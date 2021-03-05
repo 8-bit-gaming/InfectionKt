@@ -32,7 +32,7 @@ object InfectCmd : CommandExecutor {
                             return false
                         }
 
-                        val infection: BaseInfection? = InfectionPlugin.instance?.infectionManager?.getInfection(args[2])
+                        val infection: BaseInfection? = InfectionPlugin.instance.infectionManager.getInfection(args[2])
 
                         if (infection == null) {
                             // TODO: Make it auto get the infections cuz I shouldn't need to update it every time.

@@ -2,6 +2,7 @@ package cf.pixelinc.infection.infections
 
 import cf.pixelinc.infection.BaseInfection
 import cf.pixelinc.infection.InfectionType
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player

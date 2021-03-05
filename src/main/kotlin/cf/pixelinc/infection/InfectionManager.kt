@@ -8,7 +8,7 @@ class InfectionManager {
     private val infections = ArrayList<BaseInfection>()
 
     fun getInfection(name: String): BaseInfection? {
-        return infections.find { it.name.toLowerCase() == name.toLowerCase() }
+        return infections.find { it.name.equals(name, ignoreCase = true) }
     }
 
     fun getInfection(type: EntityType): BaseInfection? {

@@ -13,12 +13,12 @@ class InfectionPlugin: JavaPlugin() {
     var infectionScheduler: BukkitTask? = null
 
     companion object {
-        var instance: InfectionPlugin? = null
+        lateinit var instance: InfectionPlugin
         private set
     }
 
     override fun onEnable() {
-        getCommand("infected").executor = InfectCmd
+        getCommand("infected")?.setExecutor(InfectCmd)
 
         Bukkit.getPluginManager().registerEvents(Events, this)
         Bukkit.getPluginManager().registerEvents(PlayerData, this)

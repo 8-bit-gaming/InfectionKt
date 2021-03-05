@@ -11,7 +11,7 @@ fun Player.isOutside(): Boolean {
     val loc = this.location
     val world = loc.world
 
-    return world.getHighestBlockYAt(loc) < loc.blockY + 1
+    return world?.getHighestBlockYAt(loc)!! < loc.blockY + 1
 }
 
 fun Player.isInfected(): Boolean {

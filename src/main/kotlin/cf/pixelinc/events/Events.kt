@@ -7,11 +7,9 @@ import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
-import org.bukkit.entity.Zombie
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
@@ -27,42 +25,34 @@ object Events : Listener {
 
     @EventHandler
     fun onPlayerJoin(e: PlayerJoinEvent) {
-        // Start the burn scheduler if there's actually players.
-        if (InfectionPlugin.instance?.infectionScheduler == null) {
+        // Start the infection scheduler if there's actually players.
+        if (InfectionPlugin.instance.infectionScheduler == null) {
             print("A Player has joined, starting the scheduler.")
-            InfectionPlugin.instance?.infectionScheduler = Bukkit.getScheduler().runTaskTimerAsynchronously(InfectionPlugin.instance, {
-                for (player in Bukkit.getOnlinePlayers()) {
-                    val playerData: PlayerData = PlayerData[player]
+            InfectionPlugin.instance.infectionScheduler =
+                    Bukkit.getScheduler().runTaskTimerAsynchronously(InfectionPlugin.instance, Runnable {
+                        for (player in Bukkit.getOnlinePlayers()) {
+                            val playerData: PlayerData = PlayerData[player]
 
-                    if (playerData.isInfected()) {
-                        playerData.infection?.tickInfection(player)
-                    }
-                }
-            }, 20L, 20L)
+                            if (playerData.isInfected()) {
+                                // Most events require you to run them sync as of 1.14, we must enforce that.
+                                Bukkit.getScheduler().runTask(InfectionPlugin.instance, Runnable {
+                                    playerData.infection?.tickInfection(player)
+                                })
+                            }
+                        }
+                    }, 20L, 20L)
         }
     }
 
     @EventHandler
     fun onPlayerLeave(e: PlayerQuitEvent) {
         if (Bukkit.getOnlinePlayers().size - 1 <= 0) {
-            val scheduler = InfectionPlugin.instance?.infectionScheduler
+            val scheduler = InfectionPlugin.instance.infectionScheduler
             scheduler?.cancel()
 
-            InfectionPlugin.instance?.infectionScheduler = null
+            InfectionPlugin.instance.infectionScheduler = null
 
             print("All the players have left the server, cancelling the infection scheduler")
-        }
-    }
-
-    @EventHandler
-    fun onEntityTarget(e: EntityTargetLivingEntityEvent) {
-        if (e.target is Player && e.entity is Zombie) {
-            val player: Player = (e.target as Player)
-            val playerData: PlayerData = PlayerData[player]
-
-            // Fellow zombies won't target the infected players now.
-            if (playerData.isInfected())
-                e.isCancelled = true
         }
     }
 
@@ -76,7 +66,7 @@ object Events : Listener {
             if (playerData.isInfected()) return
 
             // Try and grab an infection by type
-            InfectionPlugin.instance?.infectionManager?.getInfection(e.damager.type)?.also { infection ->
+            InfectionPlugin.instance.infectionManager.getInfection(e.damager.type)?.also { infection ->
                 if (infection.type != InfectionType.NONE) { // Valid infection potential
                     if (chance <= infection.chance) {
                         infection.infect(player)
