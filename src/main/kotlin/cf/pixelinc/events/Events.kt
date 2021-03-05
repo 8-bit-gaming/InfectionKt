@@ -1,21 +1,37 @@
 package cf.pixelinc.events
 
 import cf.pixelinc.InfectionPlugin
+import cf.pixelinc.entities.InfectedEntity
+import cf.pixelinc.infection.InfectionManager
 import cf.pixelinc.infection.InfectionType
+import cf.pixelinc.util.isInfected
+import net.minecraft.server.v1_16_R3.EntityAnimal
+import net.minecraft.server.v1_16_R3.EntityCreature
+import net.minecraft.server.v1_16_R3.EntityTypes
+import net.minecraft.server.v1_16_R3.LootTableInfo
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
+import org.bukkit.NamespacedKey
+import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.craftbukkit.v1_16_R3.entity.CraftAnimals
+import org.bukkit.entity.Animals
 import org.bukkit.entity.Entity
+import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
+import org.bukkit.event.entity.EntityTargetEvent
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.persistence.PersistentDataType
 import java.util.*
 
 object Events : Listener {
     private val random: Random = Random()
+    private val infectionManager : InfectionManager = InfectionPlugin.instance.infectionManager
 
     private infix fun Location.equalsBlock(other: Location) =
             this.blockX == other.blockX && this.blockY == other.blockY && this.blockZ == other.blockZ
@@ -56,25 +72,50 @@ object Events : Listener {
         }
     }
 
+    private val namespacedKey = NamespacedKey(InfectionPlugin.instance, "infected")
+
     @EventHandler
     fun onInfect(e: EntityDamageByEntityEvent) {
+        // If the attacker is infected, they have a chance to infect other (animal) entities by attacking them.
+        if (e.entity is Animals) {
+            val persistedInfection = e.damager.persistentDataContainer.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0)
+
+            if (persistedInfection != 0) {
+                val infectionType = InfectionType.fromInt(persistedInfection)
+                val animal = (e.entity as CraftAnimals).handle
+
+                if (infectionType != null && random.nextDouble() <= infectionType.chance) {
+                    infectionManager.spawnInfectedAnimal(e.entity, animal, infectionType)
+                }
+            }
+        }
+
+        // Players can get infected from various entities, namely zombies
+        // TODO: allow infected passives to infect players
         if (e.entity is Player) {
             val player: Player = (e.entity as Player)
             val playerData: PlayerData = PlayerData[player]
-            val chance: Double = random.nextDouble()
-
             if (playerData.isInfected()) return
 
-            // Try and grab an infection by type
-            InfectionPlugin.instance.infectionManager.getInfection(e.damager.type)?.also { infection ->
-                if (infection.type != InfectionType.NONE) { // Valid infection potential
-                    if (chance <= infection.chance) {
-                        infection.infect(player)
+            // Try and grab an infection by entity type
+            val infection = infectionManager.getInfection(e.damager.type)
+            if (infection != null && infection.shouldInfect()) {
+                infection.infect(player)
 
-                        playerData.infection = infection
-                        player.sendMessage("${ChatColor.RED} You have been infected with the ${infection.name}")
-                    }
-                }
+                playerData.infection = infection
+                player.sendMessage("${ChatColor.RED} You have been infected with the ${infection.name}")
+            }
+        }
+    }
+
+    @EventHandler
+    fun onEntityTarget(e: EntityTargetEvent) {
+        if (e.target is Player) {
+            val player: Player = (e.target as Player)
+            // Any mobs won't target the infected players now.
+            if (player.isInfected()) {
+                e.target = null
+                e.isCancelled = true
             }
         }
     }

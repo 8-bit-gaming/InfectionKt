@@ -41,7 +41,7 @@ object ZombieInfection : BaseInfection("T-Virus", InfectionType.ZOMBIE, EntityTy
 
             // Now lets make all the hostile mobs aggro'd nearby aware that the player is now friendly.
             for(entity in player.getNearbyEntities(50.0, 50.0, 50.0))
-                if (entity is Monster)
+                if (entity is Creature)
                    if (entity.target is Player && (entity.target as Player).uniqueId == player.uniqueId)
                        entity.target = null
         }
@@ -53,16 +53,6 @@ object ZombieInfection : BaseInfection("T-Virus", InfectionType.ZOMBIE, EntityTy
                 player.fireTicks = 20 * 3
     }
 
-    @EventHandler
-    fun onEntityTarget(e: EntityTargetLivingEntityEvent) {
-        if (e.target is Player && e.entity is Monster) {
-            val player: Player = (e.target as Player)
-            val playerData: PlayerData = PlayerData[player]
 
-            // Any hostile mobs won't target the infected players now.
-            if (playerData.isInfected())
-                e.isCancelled = true
-        }
-    }
 
 }
