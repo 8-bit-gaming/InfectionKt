@@ -4,14 +4,20 @@ import cf.pixelinc.InfectionPlugin
 import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.events.PlayerData
 import cf.pixelinc.infection.BaseInfection
+import cf.pixelinc.infection.InfectionType
+import net.minecraft.server.v1_16_R3.EntityCat
+import net.minecraft.server.v1_16_R3.EntityFox
 import net.minecraft.server.v1_16_R3.EntityTypes
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
+import org.bukkit.persistence.PersistentDataType
 
 object InfectCmd : CommandExecutor {
     override fun onCommand(sender: CommandSender, cmd: Command, lbl: String, args: Array<String>): Boolean {
@@ -46,6 +52,7 @@ object InfectCmd : CommandExecutor {
                         // Grab their data
                         val targetData: PlayerData = PlayerData[target]
                         targetData.infection = infection
+                        infection.infect(target)
 
                         player.sendMessage("${ChatColor.GREEN}Successfully infected '${target.name}' with the ${infection.name}")
                         target.sendMessage("${ChatColor.RED}You have been infected with the ${infection.name}")
@@ -69,9 +76,12 @@ object InfectCmd : CommandExecutor {
                         player.sendMessage("${ChatColor.RED}Invalid usage: uninfect <player>")
                 }
                 "spawn" -> {
-                    val zombie = InfectedEntity(player.location, EntityTypes.COW)
+                    val zombie = InfectedEntity(player.location, EntityTypes.CAT)
+                    val entity : Entity = zombie.bukkitEntity
+                    entity.persistentDataContainer.set(NamespacedKey(InfectionPlugin.instance, "infected"), PersistentDataType.INTEGER, InfectionType.ZOMBIE.value)
+
                     (player.world as CraftWorld).handle.addEntity(zombie)
-                    player.sendMessage("Zambie spawned")
+                    player.sendMessage("Kat spawned")
                 }
                 else -> {
                     player.sendMessage("${ChatColor.RED}Invalid sub-command, valid: status")
