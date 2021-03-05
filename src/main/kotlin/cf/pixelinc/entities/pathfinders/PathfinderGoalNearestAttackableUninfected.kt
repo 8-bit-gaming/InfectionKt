@@ -8,20 +8,17 @@ import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
 import org.bukkit.persistence.PersistentDataType
 
-/*
-    An extension of the attack pathfinder to only attack players which are not infected.
- */
-class PathfinderGoalAttackUninfected(creature : EntityCreature, damage : Double, flag : Boolean) : PathfinderGoalMeleeAttack(creature, damage, flag) {
+class PathfinderGoalNearestAttackableUninfected<T : EntityLiving>(insentient : EntityInsentient, target : Class<T>, flag : Boolean) : PathfinderGoalNearestAttackableTarget<T>(insentient, target, flag) {
 
     private val namespacedKey = NamespacedKey(InfectionPlugin.instance, "infected")
 
-    override fun b(): Boolean {
-        val entity : EntityLiving? = this.a.goalTarget
+    override fun a(): Boolean {
+        val entity : EntityLiving? = this.e.goalTarget
         if (entity is EntityHuman) {
             val player : Player = (entity.bukkitEntity as Player)
 
             if (player.isInfected()) {
-                this.a.goalTarget = null
+                this.e.goalTarget = null
                 return false
             }
         } else if (entity is EntityLiving) {
@@ -29,11 +26,10 @@ class PathfinderGoalAttackUninfected(creature : EntityCreature, damage : Double,
             val bukkitEntity = entity.bukkitEntity
             val persistedInfection = bukkitEntity.persistentDataContainer.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0)
             if (persistedInfection == InfectionType.ZOMBIE.value) {
-                this.a.goalTarget = null
+                this.e.goalTarget = null
                 return false
             }
         }
-        return super.b()
+        return super.a()
     }
-
 }

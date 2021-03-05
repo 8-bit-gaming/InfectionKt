@@ -1,9 +1,11 @@
 package cf.pixelinc.entities
 
 import cf.pixelinc.entities.pathfinders.PathfinderGoalAttackUninfected
+import cf.pixelinc.entities.pathfinders.PathfinderGoalNearestAttackableUninfected
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.ChatColor
 import org.bukkit.Location
+import org.bukkit.World
 import org.bukkit.attribute.Attribute
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
 import org.bukkit.craftbukkit.v1_16_R3.attribute.CraftAttributeMap
@@ -17,7 +19,7 @@ import java.lang.reflect.Field
      - Have a name tag that says they're infected.
      - Follows around the player or passive mob (if they're not infected) and attacks them
  */
-class InfectedEntity<M : EntityAgeable>(loc: Location, entityType : EntityTypes<out M>) : EntityAgeable(entityType, (loc.world as CraftWorld).handle) {
+class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.server.v1_16_R3.Entity>) : EntityCreature(entity as EntityTypes<out EntityCreature>?, (loc.world as CraftWorld).handle) {
     private val attributeField: Field
 
     init {
@@ -46,24 +48,16 @@ class InfectedEntity<M : EntityAgeable>(loc: Location, entityType : EntityTypes<
     }
 
     override fun initPathfinder() {
+        super.initPathfinder()
+
         this.attributeMap.b().add(AttributeModifiable(GenericAttributes.ATTACK_DAMAGE) { a -> a.value = 1.0 })
         this.attributeMap.b().add(AttributeModifiable(GenericAttributes.FOLLOW_RANGE) { a -> a.value = 1.0 })
 
-        // target humans, animals and villagers
-        this.targetSelector.a(0, PathfinderGoalNearestAttackableTarget(this, EntityHuman::class.java, true))
-        this.targetSelector.a(1, PathfinderGoalNearestAttackableTarget(this, EntityAnimal::class.java, true))
-        this.targetSelector.a(2, PathfinderGoalNearestAttackableTarget(this, EntityVillager::class.java, true))
+        // target any living entity
+        this.targetSelector.a(0, PathfinderGoalNearestAttackableUninfected(this, EntityHuman::class.java, true))
+        this.targetSelector.a(1, PathfinderGoalNearestAttackableUninfected(this, EntityAnimal::class.java, true))
 
         //this.goalSelector.a(0, PathfinderGoalMeleeAttack(this, 1.0, false))
-        this.goalSelector.a(0, PathfinderGoalAttackUninfected(this, 1.0, false))
-        this.goalSelector.a(1, PathfinderGoalFloat(this))
-        this.goalSelector.a(2, PathfinderGoalLookAtPlayer(this, EntityHuman::class.java, 8.0F))
-        this.goalSelector.a(5, PathfinderGoalRandomStrollLand(this, 1.0))
-        this.goalSelector.a(7, PathfinderGoalRandomLookaround(this))
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun createChild(p0: WorldServer?, p1: EntityAgeable?): M {
-        return (entityType.a(p0) as M)
+        this.goalSelector.a(0, PathfinderGoalMeleeAttack(this, 1.0, false))
     }
 }
