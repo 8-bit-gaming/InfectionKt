@@ -1,35 +1,26 @@
 package cf.pixelinc.entities.pathfinders
 
-import cf.pixelinc.InfectionPlugin
-import cf.pixelinc.infection.InfectionType
 import cf.pixelinc.util.isInfected
-import net.minecraft.server.v1_16_R3.*
-import org.bukkit.NamespacedKey
+import net.minecraft.server.v1_16_R3.EntityHuman
+import net.minecraft.server.v1_16_R3.EntityInsentient
+import net.minecraft.server.v1_16_R3.EntityLiving
+import net.minecraft.server.v1_16_R3.PathfinderGoalNearestAttackableTarget
 import org.bukkit.entity.Player
-import org.bukkit.persistence.PersistentDataType
 
 class PathfinderGoalNearestAttackableUninfected<T : EntityLiving>(insentient : EntityInsentient, target : Class<T>, flag : Boolean) : PathfinderGoalNearestAttackableTarget<T>(insentient, target, flag) {
-
-    private val namespacedKey = NamespacedKey(InfectionPlugin.instance, "infected")
-
     override fun a(): Boolean {
-        val entity : EntityLiving? = this.e.goalTarget
-        if (entity is EntityHuman) {
-            val player : Player = (entity.bukkitEntity as Player)
+        val ret = super.a()
 
-            if (player.isInfected()) {
-                this.e.goalTarget = null
+        if (ret && this.c is EntityHuman) {
+            val human : Player = this.c.bukkitEntity as Player
+            if (human.isInfected()) {
+                this.c = null
                 return false
             }
-        } else if (entity is EntityLiving) {
-            // if it's an infected zombie mob, don't attack
-            val bukkitEntity = entity.bukkitEntity
-            val persistedInfection = bukkitEntity.persistentDataContainer.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0)
-            if (persistedInfection == InfectionType.ZOMBIE.value) {
-                this.e.goalTarget = null
-                return false
-            }
+
+            return true
         }
-        return super.a()
+
+        return ret
     }
 }

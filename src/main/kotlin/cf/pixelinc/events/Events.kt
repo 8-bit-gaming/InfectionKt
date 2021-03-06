@@ -107,16 +107,4 @@ object Events : Listener {
             }
         }
     }
-
-    @EventHandler
-    fun onEntityTarget(e: EntityTargetEvent) {
-        if (e.target is Player) {
-            val player: Player = (e.target as Player)
-            // Any mobs won't target the infected players now.
-            if (player.isInfected()) {
-                e.target = null
-                e.isCancelled = true
-            }
-        }
-    }
 }

@@ -1,11 +1,9 @@
 package cf.pixelinc.entities
 
-import cf.pixelinc.entities.pathfinders.PathfinderGoalAttackUninfected
 import cf.pixelinc.entities.pathfinders.PathfinderGoalNearestAttackableUninfected
 import net.minecraft.server.v1_16_R3.*
 import org.bukkit.ChatColor
 import org.bukkit.Location
-import org.bukkit.World
 import org.bukkit.attribute.Attribute
 import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
 import org.bukkit.craftbukkit.v1_16_R3.attribute.CraftAttributeMap
@@ -40,7 +38,6 @@ class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.serve
     @Suppress("UNCHECKED_CAST")
     private fun registerGenericAttribute(entity : Entity, attribute : Attribute) {
         val mapBase : AttributeMapBase = (entity as CraftLivingEntity).handle.attributeMap
-
         val map = attributeField.get(mapBase) as MutableMap<AttributeBase, AttributeModifiable>
         val attributeBase = CraftAttributeMap.toMinecraft(attribute)
         val attributeModifiable = AttributeModifiable(attributeBase, AttributeModifiable::getAttribute)
@@ -48,16 +45,20 @@ class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.serve
     }
 
     override fun initPathfinder() {
-        super.initPathfinder()
-
         this.attributeMap.b().add(AttributeModifiable(GenericAttributes.ATTACK_DAMAGE) { a -> a.value = 1.0 })
         this.attributeMap.b().add(AttributeModifiable(GenericAttributes.FOLLOW_RANGE) { a -> a.value = 1.0 })
 
-        // target any living entity
-        this.targetSelector.a(0, PathfinderGoalNearestAttackableUninfected(this, EntityHuman::class.java, true))
-        this.targetSelector.a(1, PathfinderGoalNearestAttackableUninfected(this, EntityAnimal::class.java, true))
+        this.targetSelector.a(1, PathfinderGoalNearestAttackableUninfected(this, EntityHuman::class.java, true))
+        this.targetSelector.a(2, PathfinderGoalNearestAttackableUninfected(this, EntityAnimal::class.java, true))
+
+        this.goalSelector.a(1, PathfinderGoalMeleeAttack(this, 1.0, false))
+        this.goalSelector.a(2, PathfinderGoalFloat(this))
+        this.goalSelector.a(3, PathfinderGoalRandomLookaround(this ))
+        this.goalSelector.a(3, PathfinderGoalRandomStrollLand(this, 1.0))
+        this.goalSelector.a(4, PathfinderGoalPanic(this, 1.25))
+        this.goalSelector.a(5, PathfinderGoalLookAtPlayer(this, EntityHuman::class.java, 4.0f))
+
 
         //this.goalSelector.a(0, PathfinderGoalMeleeAttack(this, 1.0, false))
-        this.goalSelector.a(0, PathfinderGoalMeleeAttack(this, 1.0, false))
     }
 }
