@@ -5,18 +5,18 @@ import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.events.PlayerData
 import cf.pixelinc.infection.BaseInfection
 import cf.pixelinc.infection.InfectionType
-import net.minecraft.server.v1_16_R3.EntityCat
-import net.minecraft.server.v1_16_R3.EntityFox
-import net.minecraft.server.v1_16_R3.EntityTypes
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityTypes
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
-import org.bukkit.entity.Entity
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.persistence.PersistentDataType
 
 object InfectCmd : CommandExecutor {
@@ -76,11 +76,11 @@ object InfectCmd : CommandExecutor {
                         player.sendMessage("${ChatColor.RED}Invalid usage: uninfect <player>")
                 }
                 "spawn" -> {
-                    val zombie = InfectedEntity(player.location, EntityTypes.CAT)
-                    val entity : Entity = zombie.bukkitEntity
+                    val zombie = InfectedEntity(player.location, EntityTypes.j)  // j = cat
+                    val entity : CraftEntity = (zombie as Entity).bukkitEntity
                     entity.persistentDataContainer.set(NamespacedKey(InfectionPlugin.instance, "infected"), PersistentDataType.INTEGER, InfectionType.ZOMBIE.value)
 
-                    (player.world as CraftWorld).handle.addEntity(zombie)
+                    (player.world as CraftWorld).handle.addFreshEntity(zombie, CreatureSpawnEvent.SpawnReason.CUSTOM)
                     player.sendMessage("Kat spawned")
                 }
                 else -> {

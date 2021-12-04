@@ -24,7 +24,6 @@ class InfectionPlugin: JavaPlugin() {
 
         Bukkit.getPluginManager().registerEvents(Events, this)
         Bukkit.getPluginManager().registerEvents(PlayerData, this)
-
     }
 
 }

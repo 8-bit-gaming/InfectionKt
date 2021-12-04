@@ -4,11 +4,12 @@ import cf.pixelinc.InfectionPlugin
 import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.infection.infections.AirborneInfection
 import cf.pixelinc.infection.infections.ZombieInfection
-import net.minecraft.server.v1_16_R3.EntityAnimal
+import net.minecraft.world.entity.animal.EntityAnimal
 import org.bukkit.NamespacedKey
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
+import org.bukkit.event.entity.CreatureSpawnEvent
 import org.bukkit.persistence.PersistentDataType
 
 class InfectionManager {
@@ -22,9 +23,14 @@ class InfectionManager {
         return infections.find { it.entity == type }
     }
 
+    fun getInfection(type: InfectionType): BaseInfection? {
+        return infections.find { it.type == type }
+    }
+
     // Spawn an infected animal
     fun spawnInfectedAnimal(entity : Entity, animal : EntityAnimal, infectionType : InfectionType) {
-        val infectedEntity = InfectedEntity(entity.location, animal.entityType)
+        // ad() => getEntityType()
+        val infectedEntity = InfectedEntity(entity.location, animal.ad())
         val bukkitEntity: Entity = infectedEntity.bukkitEntity
 
         bukkitEntity.persistentDataContainer.set(
@@ -34,7 +40,7 @@ class InfectionManager {
         )
 
         entity.remove()
-        (entity.world as CraftWorld).handle.addEntity(infectedEntity)
+        (entity.world as CraftWorld).handle.addFreshEntity(infectedEntity, CreatureSpawnEvent.SpawnReason.CUSTOM)
     }
 
     init {
