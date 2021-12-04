@@ -1,13 +1,22 @@
 package cf.pixelinc.entities
 
 import cf.pixelinc.entities.pathfinders.PathfinderGoalNearestAttackableUninfected
-import net.minecraft.server.v1_16_R3.*
+
+import net.minecraft.world.entity.EntityCreature
+import net.minecraft.world.entity.EntityTypes
+import net.minecraft.world.entity.ai.attributes.AttributeBase
+import net.minecraft.world.entity.ai.attributes.AttributeMapBase
+import net.minecraft.world.entity.ai.attributes.AttributeModifiable
+import net.minecraft.world.entity.ai.attributes.GenericAttributes
+import net.minecraft.world.entity.ai.goal.*
+import net.minecraft.world.entity.animal.EntityAnimal
+import net.minecraft.world.entity.player.EntityHuman
 import org.bukkit.ChatColor
 import org.bukkit.Location
 import org.bukkit.attribute.Attribute
-import org.bukkit.craftbukkit.v1_16_R3.CraftWorld
-import org.bukkit.craftbukkit.v1_16_R3.attribute.CraftAttributeMap
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftLivingEntity
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld
+import org.bukkit.craftbukkit.v1_18_R1.attribute.CraftAttributeMap
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftLivingEntity
 import org.bukkit.entity.Entity
 import java.lang.reflect.Field
 
@@ -17,15 +26,18 @@ import java.lang.reflect.Field
      - Have a name tag that says they're infected.
      - Follows around the player or passive mob (if they're not infected) and attacks them
  */
-class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.server.v1_16_R3.Entity>) : EntityCreature(entity as EntityTypes<out EntityCreature>?, (loc.world as CraftWorld).handle) {
+@Suppress("UNCHECKED_CAST")
+class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.world.entity.Entity>) : EntityCreature(entity as EntityTypes<out EntityCreature>, (loc.world as CraftWorld).handle) {
     private val attributeField: Field
 
     init {
-        this.setPosition(loc.x, loc.y, loc.z)
+        // set position function
+        this.o(loc.x, loc.y, loc.z)
 
-        this.health = 20.0f
-        this.customName = ChatComponentText("${ChatColor.RED}Infected")
-        this.customNameVisible = true
+        // set health function
+        this.c(20.0f)
+        this.bukkitEntity.customName = "${ChatColor.RED}Infected"
+        this.bukkitEntity.isCustomNameVisible = true
 
         attributeField = AttributeMapBase::class.java.getDeclaredField("b")
         attributeField.isAccessible = true
@@ -35,27 +47,43 @@ class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.serve
     }
 
     // Modifies an entity to include new attributes
-    @Suppress("UNCHECKED_CAST")
-    private fun registerGenericAttribute(entity : Entity, attribute : Attribute) {
-        val mapBase : AttributeMapBase = (entity as CraftLivingEntity).handle.attributeMap
-        val map = attributeField.get(mapBase) as MutableMap<AttributeBase, AttributeModifiable>
-        val attributeBase = CraftAttributeMap.toMinecraft(attribute)
-        val attributeModifiable = AttributeModifiable(attributeBase, AttributeModifiable::getAttribute)
-        map[attributeBase] = attributeModifiable
+     @Suppress("UNCHECKED_CAST")
+     private fun registerGenericAttribute(entity : Entity, attribute : Attribute) {
+         val mapBase : AttributeMapBase = (entity as CraftLivingEntity).handle.ep()
+         val map = attributeField.get(mapBase) as MutableMap<AttributeBase, AttributeModifiable>
+         val attributeBase = CraftAttributeMap.toMinecraft(attribute)
+         val attributeModifiable = AttributeModifiable(attributeBase, AttributeModifiable::a)
+         map[attributeBase] = attributeModifiable
+     }
+
+    // initPathfinder
+    override fun u() {
+        // attack damage
+        this.getAttributeMap().b().add(AttributeModifiable(GenericAttributes.f) { a -> a.a(1.0) })
+
+        // follow range
+        this.getAttributeMap().b().add(AttributeModifiable(GenericAttributes.b) { a -> a.a(1.0) })
+
+        this.getTargetSelector().a(1, PathfinderGoalNearestAttackableUninfected(this, EntityHuman::class.java, true))
+        this.getTargetSelector().a(2, PathfinderGoalNearestAttackableUninfected(this, EntityAnimal::class.java, true))
+
+        this.getGoalSelector().a(1, PathfinderGoalMeleeAttack(this, 1.0, false))
+        this.getGoalSelector().a(2, PathfinderGoalFloat(this))
+        this.getGoalSelector().a(3, PathfinderGoalRandomLookaround(this ))
+        this.getGoalSelector().a(3, PathfinderGoalRandomStrollLand(this, 1.0))
+        this.getGoalSelector().a(4, PathfinderGoalPanic(this, 1.25))
+        this.getGoalSelector().a(5, PathfinderGoalLookAtPlayer(this, EntityHuman::class.java, 4.0f))
     }
 
-    override fun initPathfinder() {
-        this.attributeMap.b().add(AttributeModifiable(GenericAttributes.ATTACK_DAMAGE) { a -> a.value = 1.0 })
-        this.attributeMap.b().add(AttributeModifiable(GenericAttributes.FOLLOW_RANGE) { a -> a.value = 1.0 })
+    private fun getGoalSelector(): PathfinderGoalSelector {
+        return this.bR
+    }
 
-        this.targetSelector.a(1, PathfinderGoalNearestAttackableUninfected(this, EntityHuman::class.java, true))
-        this.targetSelector.a(2, PathfinderGoalNearestAttackableUninfected(this, EntityAnimal::class.java, true))
+    private fun getTargetSelector(): PathfinderGoalSelector {
+        return this.bS
+    }
 
-        this.goalSelector.a(1, PathfinderGoalMeleeAttack(this, 1.0, false))
-        this.goalSelector.a(2, PathfinderGoalFloat(this))
-        this.goalSelector.a(3, PathfinderGoalRandomLookaround(this ))
-        this.goalSelector.a(3, PathfinderGoalRandomStrollLand(this, 1.0))
-        this.goalSelector.a(4, PathfinderGoalPanic(this, 1.25))
-        this.goalSelector.a(5, PathfinderGoalLookAtPlayer(this, EntityHuman::class.java, 4.0f))
+    private fun getAttributeMap(): AttributeMapBase {
+        return this.ep()
     }
 }
