@@ -57,8 +57,5 @@ class InfectedEntity(loc: Location, entity : EntityTypes<out net.minecraft.serve
         this.goalSelector.a(3, PathfinderGoalRandomStrollLand(this, 1.0))
         this.goalSelector.a(4, PathfinderGoalPanic(this, 1.25))
         this.goalSelector.a(5, PathfinderGoalLookAtPlayer(this, EntityHuman::class.java, 4.0f))
-
-
-        //this.goalSelector.a(0, PathfinderGoalMeleeAttack(this, 1.0, false))
     }
 }
