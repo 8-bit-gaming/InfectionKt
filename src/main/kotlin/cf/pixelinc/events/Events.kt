@@ -1,14 +1,8 @@
 package cf.pixelinc.events
 
 import cf.pixelinc.InfectionPlugin
-import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.infection.InfectionManager
 import cf.pixelinc.infection.InfectionType
-import cf.pixelinc.util.isInfected
-import net.minecraft.server.v1_16_R3.EntityAnimal
-import net.minecraft.server.v1_16_R3.EntityCreature
-import net.minecraft.server.v1_16_R3.EntityTypes
-import net.minecraft.server.v1_16_R3.LootTableInfo
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Location
@@ -93,13 +87,18 @@ object Events : Listener {
             val playerData: PlayerData = PlayerData[player]
             if (playerData.isInfected()) return
 
-            // Try and grab an infection by entity type
-            val infection = infectionManager.getInfection(e.damager.type)
-            if (infection != null && infection.shouldInfect()) {
-                infection.infect(player)
+            // We cannot use the entity type here anymore because it returns UNKNOWN for our custom entity it seems.
+            val persistedInfection = e.damager.persistentDataContainer.getOrDefault(namespacedKey, PersistentDataType.INTEGER, 0)
+            if (persistedInfection != 0) {
+                val infectionType = InfectionType.fromInt(persistedInfection)
+                val infection = infectionType?.let { infectionManager.getInfection(it) }
 
-                playerData.infection = infection
-                player.sendMessage("${ChatColor.RED} You have been infected with the ${infection.name}")
+                if (infection != null && infection.shouldInfect()) {
+                    infection.infect(player)
+
+                    playerData.infection = infection
+                    player.sendMessage("${ChatColor.RED} You have been infected with the ${infection.name}")
+                }
             }
         }
     }
