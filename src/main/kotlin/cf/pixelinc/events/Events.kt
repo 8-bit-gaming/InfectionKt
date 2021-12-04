@@ -43,7 +43,7 @@ object Events : Listener {
     fun onPlayerJoin(e: PlayerJoinEvent) {
         // Start the infection scheduler if there's actually players.
         if (InfectionPlugin.instance.infectionScheduler == null) {
-            print("A Player has joined, starting the scheduler.")
+            println("A Player has joined, starting the scheduler.")
             InfectionPlugin.instance.infectionScheduler =
                     Bukkit.getScheduler().runTaskTimerAsynchronously(InfectionPlugin.instance, Runnable {
                         for (player in Bukkit.getOnlinePlayers()) {
@@ -68,7 +68,7 @@ object Events : Listener {
 
             InfectionPlugin.instance.infectionScheduler = null
 
-            print("All the players have left the server, cancelling the infection scheduler")
+            println("All the players have left the server, cancelling the infection scheduler")
         }
     }
 
