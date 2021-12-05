@@ -4,3 +4,8 @@ test/
 
 *.iml
 dependency-reduced-pom.xml
+
+build/
+.gradle
+out/
+gradle/
