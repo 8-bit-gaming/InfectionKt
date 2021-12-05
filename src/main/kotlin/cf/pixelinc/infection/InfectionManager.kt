@@ -4,7 +4,7 @@ import cf.pixelinc.InfectionPlugin
 import cf.pixelinc.entities.InfectedEntity
 import cf.pixelinc.infection.infections.AirborneInfection
 import cf.pixelinc.infection.infections.ZombieInfection
-import net.minecraft.world.entity.animal.EntityAnimal
+import net.minecraft.world.entity.animal.Animal
 import org.bukkit.NamespacedKey
 import org.bukkit.craftbukkit.v1_18_R1.CraftWorld
 import org.bukkit.entity.Entity
@@ -28,9 +28,9 @@ class InfectionManager {
     }
 
     // Spawn an infected animal
-    fun spawnInfectedAnimal(entity : Entity, animal : EntityAnimal, infectionType : InfectionType) {
+    fun spawnInfectedAnimal(entity : Entity, animal : Animal, infectionType : InfectionType) {
         // ad() => getEntityType()
-        val infectedEntity = InfectedEntity(entity.location, animal.ad())
+        val infectedEntity = InfectedEntity(entity.location, animal.type)
         val bukkitEntity: Entity = infectedEntity.bukkitEntity
 
         bukkitEntity.persistentDataContainer.set(

@@ -1,22 +1,20 @@
 package cf.pixelinc.entities.pathfinders
 
 import cf.pixelinc.util.isInfected
-import net.minecraft.world.entity.EntityInsentient
-import net.minecraft.world.entity.EntityLiving
-import net.minecraft.world.entity.ai.goal.target.PathfinderGoalNearestAttackableTarget
-import net.minecraft.world.entity.player.EntityHuman
-
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal
 
 import org.bukkit.entity.Player
 
-class PathfinderGoalNearestAttackableUninfected<T : EntityLiving>(insentient : EntityInsentient, target : Class<T>, flag : Boolean) : PathfinderGoalNearestAttackableTarget<T>(insentient, target, flag) {
-    override fun a(): Boolean {
-        val ret = super.a()
+class PathfinderGoalNearestAttackableUninfected<T : LivingEntity>(insentient : Mob, target : Class<T>, flag : Boolean) : NearestAttackableTargetGoal<T>(insentient, target, flag) {
+    override fun canUse(): Boolean {
+        val ret = super.canUse()
 
-        if (ret && this.c is EntityHuman) {
-            val human : Player = (this.c as EntityHuman).bukkitEntity as Player
+        if (ret && this.target is net.minecraft.world.entity.player.Player) {
+            val human : Player = (this.target as net.minecraft.world.entity.player.Player).bukkitEntity as Player
             if (human.isInfected()) {
-                this.c = null
+                this.target = null
                 return false
             }
 
